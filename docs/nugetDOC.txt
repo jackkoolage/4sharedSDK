@@ -1,0 +1,304 @@
+# Features:
+* Assemblies for .NET 4.5.2 and .NET Standard 2.0 and .NET Core 2.1
+* Just one external reference (Newtonsoft.Json)
+* Easy installation using NuGet
+* Upload/Download tracking support
+* Proxy Support
+* Upload/Download cancellation support
+
+
+# List of functions:
+**Token**
+1. Login
+1. Register
+
+**Account(Mine)**
+1. UserInfo
+1. UpdateUserInfo
+1. GetAvatarPicture
+1. SetAvatarPicture
+
+**Comment**
+1. ListComments
+1. Create
+1. Delete
+1. Reply
+1. ReportAsSpam
+1. UnReportAsSpam
+
+**Data**
+1. SearchRoot
+1. EmptyRecycleBin
+1. ListRoot
+1. RootID
+1. RecycleBinID
+1. ListRecycleBin
+1. RestoreRecycleBin
+1. GetLinkForFile
+
+**File**
+1. Upload
+1. UploadLargeFile
+1. Update
+1. UpdateLargeFile
+1. Copy
+1. CopyMultiple
+1. Move
+1. MoveMultiple
+1. Trash
+1. UnTrash
+1. TrashMultiple
+1. Delete
+1. DeleteMultiple
+1. Metadata
+1. EditMetadata
+1. ChangePrivacy
+1. Rename
+1. Download
+1. DownloadLargeFile
+1. DownloadAsStream
+1. ImportToMyAccount
+1. ThumbnailUrl
+1. UnZip
+1. Exists
+
+**Folder**
+1. Password
+1. SetDescription
+1. ChangePermission
+1. ChangePrivacy
+1. Search
+1. ListSubFiles
+1. ListSubFolders
+1. Create
+1. Copy
+1. CopyMultiple
+1. Move
+1. MoveMultiple
+1. UnTrash
+1. Trash
+1. Delete
+1. DeleteMultiple
+1. TrashMultiple
+1. Rename
+1. Metadata
+1. Exists
+1. ExistsInTargetFolder
+
+**User**
+1. SearchFiles
+1. Metadata
+1. AvatarPicture
+1. ListFilesRelatedToFile
+
+
+# CodeMap:
+![codemap](https://i.postimg.cc/yNZ3JPGW/4s-codemap.png)
+
+
+# Code simple:
+```vb
+'first login (one time only)
+
+    Async Sub Login_Base64()
+        Dim lgnBase64 = Await FourSharedSDK.GetToken.Login_Base64("JackKoolage@go.com", "123456")
+    End Sub
+
+'Set your client
+    Dim Clnt As FourSharedSDK.IClient = New FourSharedSDK.FClient(lgnBase64, Nothing)
+
+
+
+'Functions:
+Imports FourSharedSDK.utilitiez
+
+Async Sub UserInfo()
+Dim rslt = Await Clnt.Account.UserInfo()
+End Sub
+
+Async Sub UpdateUserInfo()
+Dim rslt = Await Clnt.Account.UpdateUserInfo(Nothing, Nothing, Nothing, Nothing, AllowSearchEnum.disabled)
+End Sub
+
+Async Sub GetAvatarPicture()
+Dim rslt = Await Clnt.Account.AvatarPicture(ImageSizeEnum._72x72)
+End Sub
+
+Async Sub SetAvatarPicture()
+Dim rslt = Await Clnt.Account.SetAvatarPicture("C:\1e.jpg", UploadTypes.FilePath, "1e.jpg", Nothing, Nothing)
+End Sub
+
+Async Sub LisSubtFiles()
+Dim rslt = Await Clnt.Folders.ListSubFiles("Dir_id", Nothing, 100, 0)
+
+For Each onz In rslt.files
+DataGridView1.Rows.Add(onz.name, onz.IsPrivate, onz.id, onz.size, onz.thumbnailUrl, onz.parentId, onz.downloadUrl, onz.ImgUrl(ImageSizeEnum._320x240))
+Next
+End Sub
+
+Async Sub ListSubFolders()
+Dim rslt = Await Clnt.Folders.ListSubFolders("Dir_id", 100, 0)
+
+For Each onz In rslt.folders
+DataGridView1.Rows.Add(onz.name, onz.Privacy.ToString, onz.id, onz.TotalFiles, onz.TotalFolders, onz.parentId, onz.permissions.ToString, onz.folderLink)
+Next
+End Sub
+
+Async Sub Search()
+Dim rslt = Await Clnt.Folders.Search("Dir_id", TextBox_searchKeyword.Text, Nothing, 100, 0)
+
+For Each onz In rslt.files
+DataGridView1.Rows.Add(onz.name, onz.IsPrivate, onz.id, ConvSze(onz.size), onz.thumbnailUrl, onz.parentId, onz.downloadUrl, onz.ImgUrl(ImageSizeEnum._320x240))
+Next
+End Sub
+
+Async Sub SearchRoot()
+Await Clnt.Data.SearchRoot(TextBox_searchKeyword.Text, Nothing, 100, 0)
+End Sub
+
+Async Sub Create()
+Await Clnt.Folders.Create("Dir_id", "lolo", "this is a new folder of")
+End Sub
+
+Async Sub Rename()
+Await Clnt.Folders.Rename("Dir_id", "MyNewName")
+End Sub
+
+Async Sub ChangePermission()
+Await Clnt.Folders.ChangePermission("Dir_id", FolderPermissionsEnum.read)
+End Sub
+
+Async Sub ChangePrivacy()
+Await Clnt.Folders.ChangePrivacy("Dir_id", PrivacyEnum.private)
+End Sub
+
+Async Sub Password()
+Await Clnt.Folders.Password("Dir_id", "1905")
+End Sub
+
+Async Sub FolderMetadata()
+Await Clnt.Folders.Metadata("Dir_id")
+End Sub
+
+Async Sub FileMetadata()
+Await Clnt.Files.Metadata("File_id", AddFieldsEnum.ImageMetainfo)
+End Sub
+
+Async Sub Exists()
+Await Clnt.Folders.Exists("Dir_id")
+End Sub
+
+Async Sub SetDescription()
+Await Clnt.Folders.SetDescription("Dir_id", "look at this")
+End Sub
+
+Async Sub ListRoot()
+Dim getRootId= Await Clnt.Account.UserInfo()
+Await Clnt.Data.ListRoot(getRootId.rootFolderId, 100, 0)
+End Sub
+
+Async Sub UsersSearchFiles()
+Dim rslt = Await Clnt.Users.SearchFiles("big", FileTypeEnum.Archives, Nothing, Nothing, Nothing, SortByEnum.size, OrderByEnum.asc, 100, 0)
+End Sub
+
+Async Sub Upload()
+Dim frm As New DeQma.FileFolderDialogs.VistaOpenFileDialog With {.Multiselect = False}
+If frm.ShowDialog = DialogResult.OK AndAlso Not String.IsNullOrEmpty(frm.FileName) Then
+
+Dim UploadCancellationToken As New Threading.CancellationTokenSource()
+Dim _ReportCls As New Progress(Of FourSharedSDK.ReportStatus)(Sub(ReportClass As FourSharedSDK.ReportStatus)
+  Label1.Text = String.Format("{0}/{1}", ConvSze(ReportClass.BytesTransferred), ConvSze(ReportClass.TotalBytes))
+  ProgressBar1.Value = CInt(ReportClass.ProgressPercentage)
+  Label2.Text = If(CStr(ReportClass.TextStatus) Is Nothing, "Uploading...", CStr(ReportClass.TextStatus))
+  End Sub)
+Dim rslt = Await Clnt.Files.Upload(frm.FileName, UploadTypes.FilePath, "Dir_id", IO.Path.GetFileName(frm.FileName), _ReportCls, UploadCancellationToken.Token)
+PropertyGrid1.SelectedObject = rslt
+End If
+End Sub
+
+Async Sub UploadLargeFile()
+Dim sze = New IO.FileInfo(frm.FileName).Length
+Await Clnt.Files.UploadLargeFile(frm.FileName, UploadTypes.FilePath, "Dir_id", IO.Path.GetFileName(frm.FileName), sze, nothing, nothing)
+End Sub
+
+Async Sub DeleteMultipleFiles()
+Await Clnt.Files.DeleteMultiple(New List(Of String) From {"File_id_1", "File_id_2", "File_id_3"})
+End Sub
+
+Async Sub Download()
+Dim frm As New DeQma.FileFolderDialogs.VistaFolderBrowserDialog With {.ShowNewFolderButton = True}
+If frm.ShowDialog = DialogResult.OK AndAlso Not String.IsNullOrEmpty(frm.SelectedPath) Then
+Dim UploadCancellationToken As New Threading.CancellationTokenSource()
+Dim _ReportCls As New Progress(Of FourSharedSDK.ReportStatus)(Sub(ReportClass As FourSharedSDK.ReportStatus)
+  Label1.Text = String.Format("{0}/{1}", ConvSze(ReportClass.BytesTransferred), ConvSze(ReportClass.TotalBytes))
+  ProgressBar1.Value = CInt(ReportClass.ProgressPercentage)
+  Label2.Text = If(CStr(ReportClass.TextStatus) Is Nothing, "Downloading...", CStr(ReportClass.TextStatus))
+  End Sub)
+Dim getFileId= Await Clnt.Files.Metadata("File_id")
+Await Clnt.Files.Download(getFileId.path, frm.SelectedPath, _ReportCls, UploadCancellationToken.Token)
+End If
+End Sub
+
+Async Sub UsersAvatar()
+Await Clnt.Users.AvatarPicture("User_id", ImageSizeEnum._2560x1600)
+End Sub
+
+Async Sub ExistsInDir()
+Await Clnt.Folders.ExistsInTargetFolder("New%20folder", "Dir_id")
+End Sub
+
+Async Sub TrashMultipleFolders()
+Await Clnt.Folders.TrashMultiple(New List(Of String) From {"Dir_id_1", "Dir_id_2"})
+End Sub
+
+Async Sub ListComments()
+Await Clnt.Comments.ListComments("File_id", 100, 0)
+End Sub
+
+Async Sub Comment()
+Await Clnt.Comments.Create("File_id", "test api")
+End Sub
+
+Async Sub CommentDelete()
+Await Clnt.Comments.Delete("File_id", "Comment_id")
+End Sub
+
+Async Sub ReplyComment()
+Await Clnt.Comments.Reply("File_id", "Comment_id", "testing message...")
+End Sub
+
+Async Sub ReportAsSpam_UnReportAsSpam()
+Dim reporting = Await Clnt.Comments.ReportAsSpam("Comment_id")
+Await Clnt.Comments.UnReportAsSpam(reporting)
+End Sub
+
+Async Sub ListFilesRelatedToFile()
+Dim rslt = Await Clnt.Users.ListFilesRelatedToFile("File_id", 100, 0)
+
+For Each onz In rslt.files
+DataGridView1.Rows.Add(onz.name, onz.ImgUrl(ImageSizeEnum._320x240))
+Next
+End Sub
+
+Async Sub ImportToMyAccount()
+Await Clnt.Files.ImportToMyAccount("File_id", "ImportToDir_id")
+End Sub
+
+Async Sub EmptyRecycleBin()
+Await Clnt.Data.EmptyRecycleBin()
+End Sub
+
+Async Sub RestoreRecycleBin()
+Dim recBinId = Await Clnt.Data.RecycleBinID
+Await Clnt.Data.RestoreRecycleBin(recBinId)
+End Sub
+
+Async Sub GetLinkForFile()
+Await Clnt.Data.GetLinkForFile()
+End Sub
+
+Async Sub FileUnZip()
+Await Clnt.Files.UnZip("File_id")
+End Sub
+
+```
