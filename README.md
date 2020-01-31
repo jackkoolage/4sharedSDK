@@ -105,304 +105,98 @@
 
 # Code simple:
 ```vb
-'first login (one time only)
-
-    Async Sub Login_Base64()
-        Dim lgnBase64 = Await FourSharedSDK.GetToken.Login_Base64("JackKoolage@go.com", "123456")
-        PropertyGrid1.SelectedObject = (lgnBase64)
-    End Sub
-
-'Set your client
-    Dim Clnt As FourSharedSDK.IClient = New FourSharedSDK.FClient(lgnBase64, Nothing)
+    Async Function tasks() As Task
+        'first login (one time only)
+        Dim tokn = Await FourSharedSDK.GetToken.Login_Base64("your_email", "your_password")
+        ''set proxy and connection options
+        Dim con As New FourSharedSDK.ConnectionSettings With {.CloseConnection = True, .TimeOut = TimeSpan.FromMinutes(30), .Proxy = New FourSharedSDK.ProxyConfig With {.SetProxy = True, .ProxyIP = "127.0.0.1", .ProxyPort = 8888, .ProxyUsername = "user", .ProxyPassword = "pass"}}
+        ''set api client
+        Dim client As FourSharedSDK.IClient = New FourSharedSDK.FClient(tokn, Nothing)
 
 
+        ''functions:
+        'Account
+        Await client.Account.GetAvatarPicture(ImageSizeEnum._72x72)
+        Dim _ReportCls As New Progress(Of FourSharedSDK.ReportStatus)(Sub(ReportClass As FourSharedSDK.ReportStatus)
+                                                                          Label1.Text = String.Format("{0}/{1}", (ReportClass.BytesTransferred), (ReportClass.TotalBytes))
+                                                                          Label1.Text = CInt(ReportClass.ProgressPercentage)
+                                                                          Label1.Text = If(CStr(ReportClass.TextStatus) Is Nothing, "Uploading...", CStr(ReportClass.TextStatus))
+                                                                      End Sub)
+        Await client.Account.SetAvatarPicture("c:\\pic.jpg", UploadTypes.FilePath, "pic.jpg", _ReportCls, Nothing)
+        Await client.Account.UpdateUserInfo("first_name", "last_name", "pass", "email", AllowSearchEnum.disabled)
+        Await client.Account.UserInfo
 
-'Functions:
-Imports FourSharedSDK.utilitiez
+        ''Comments
+        Await client.Comments.Create("file_id", "this is comment")
+        Await client.Comments.Delete("file_id", "comment_id")
+        Await client.Comments.ListComments("file_id", 50, 0)
+        Await client.Comments.Reply("file_id", "comment_id", "this is replay to an comment")
+        Await client.Comments.ReportAsSpam("comment_id")
+        Await client.Comments.UnReportAsSpam("comment_id")
 
-    Async Sub UserInfo()
-        Dim rslt = Await Clnt.Account.UserInfo()
-        PropertyGrid1.SelectedObject = rslt
-    End Sub
+        ''Data
+        Await client.Data.EmptyRecycleBin
+        Await client.Data.GetLinkForFile
+        Await client.Data.ListRecycleBin(Nothing, 50, 0)
+        Await client.Data.ListRoot("root_id", 50, 0)
+        Await client.Data.RecycleBinID("root_id")
+        Await client.Data.RestoreRecycleBin(Nothing)
+        Await client.Data.RootID()
+        Await client.Data.SearchRoot("emy", FileTypeEnum.Music, 50, 0)
 
-    Async Sub UpdateUserInfo()
-        Dim rslt = Await Clnt.Account.UpdateUserInfo(Nothing, Nothing, Nothing, Nothing, AllowSearchEnum.disabled)
-        DataGridView1.Rows.Add(rslt.allowSearch.ToString)
-    End Sub
+        ''Files
+        Await client.Files.ChangePrivacy("", True)
+        Await client.Files.Copy("file_id", "folder_id", "newName")
+        Await client.Files.CopyMultiple(New List(Of String) From {{"file_id"}, {"file_id"}}, "folder_id")
+        Await client.Files.Delete("file_id")
+        Await client.Files.DeleteMultiple(New List(Of String) From {{"file_id"}, {"file_id"}})
+        Await client.Files.Download("/My 4shared/oppo/bouncy1.8.5.zip", "c:\\", _ReportCls, Nothing)
+        Await client.Files.DownloadAsStream("/My 4shared/oppo/bouncy1.8.5.zip", _ReportCls, Nothing)
+        Await client.Files.DownloadLargeFile("/My 4shared/oppo/bouncy1.8.5.zip", "c:\\", _ReportCls, Nothing)
+        Await client.Files.EditMetadata("file_id", "this is file", "sdk,api,cloud")
+        Await client.Files.Exists("file_id")
+        Await client.Files.ImportToMyAccount("file_id", "folder_id")
+        Await client.Files.Metadata("file_id", AddFieldsEnum.ImageMetainfo)
+        Await client.Files.Move("file_id", "folder_id")
+        Await client.Files.MoveMultiple(New List(Of String) From {{"file_id"}, {"file_id"}}, "folder_id")
+        Await client.Files.Rename("file_id", "newName")
+        Await client.Files.ThumbnailUrl("file_id", ImageSizeEnum._320x240)
+        Await client.Files.Trash("file_id")
+        Await client.Files.TrashMultiple(New List(Of String) From {{"file_id"}, {"file_id"}})
+        Await client.Files.UnTrash("file_id")
+        Await client.Files.UnZip("file_id")
+        Await client.Files.Update("c:\\fle.mp4", UploadTypes.FilePath, "file_id", "folder_id", "fle.mp4", _ReportCls, Nothing)
+        Await client.Files.UpdateLargeFile("c:\\fle.mp4", UploadTypes.FilePath, "file_id", "folder_id", "fle.mp4", 12345, _ReportCls, Nothing)
+        Await client.Files.Upload("c:\\fle.mp4", UploadTypes.FilePath, "folder_id", "fle.mp4", _ReportCls, Nothing)
+        Await client.Files.UploadLargeFile("c:\\fle.mp4", UploadTypes.FilePath, "folder_id", "fle.mp4", 123456, _ReportCls, Nothing)
 
-    Async Sub GetAvatarPicture()
-        Dim rslt = Await Clnt.Account.AvatarPicture(ImageSizeEnum._72x72)
-        DataGridView1.Rows.Add(rslt)
-    End Sub
+        ''Folders
+        Await client.Folders.ChangePermission("folder_id", FolderPermissionsEnum.read)
+        Await client.Folders.ChangePrivacy("", PrivacyEnum.private)
+        Await client.Folders.Copy("folder_id", "folder_id", Nothing)
+        Await client.Folders.CopyMultiple(New List(Of String) From {{"folder_id"}, {"folder_id"}}, "folder_id")
+        Await client.Folders.Create("folder_id", "new folder", "music dir")
+        Await client.Folders.Delete("folder_id")
+        Await client.Folders.DeleteMultiple(New List(Of String) From {{"folder_id"}, {"folder_id"}})
+        Await client.Folders.Exists("folder_id")
+        Await client.Folders.ExistsInTargetFolder("work folder", "folder_id")
+        Await client.Folders.ListSubFiles("folder_id", FileTypeEnum.Video, AddFieldsEnum.id3, 50, 0)
+        Await client.Folders.ListSubFolders("folder_id", 50, 0)
+        Await client.Folders.Metadata("folder_id")
+        Await client.Folders.Move("folder_id", "folder_id", Nothing)
+        Await client.Folders.MoveMultiple(New List(Of String) From {{"folder_id"}, {"folder_id"}}, "folder_id")
+        Await client.Folders.Password("folder_id", "1234")
+        Await client.Folders.Rename("folder_id", "new name")
+        Await client.Folders.Search("folder_id", "emy", FileTypeEnum.Video, 50, 0)
+        Await client.Folders.SetDescription("folder_id", "this is des")
+        Await client.Folders.Trash("folder_id")
+        Await client.Folders.TrashMultiple(New List(Of String) From {{"folder_id"}, {"folder_id"}})
+        Await client.Folders.UnTrash("folder_id")
 
-    Async Sub SetAvatarPicture()
-        Dim rslt = Await Clnt.Account.SetAvatarPicture("C:\1e.jpg", UploadTypes.FilePath, "1e.jpg", Nothing, Nothing)
-        MsgBox(rslt)
-    End Sub
-
-    Async Sub LisSubtFiles()
-        Dim rslt = Await Clnt.Folders.ListSubFiles("Dir_id", Nothing, 100, 0)
-        DataGridView1.Rows.Add("name", "IsPrivate", "id", "size", "thumbnailUrl", "parentId", "downloadUrl", "ImgUrl")
-        For Each onz In rslt.files
-            DataGridView1.Rows.Add(onz.name, onz.IsPrivate, onz.id, onz.size, onz.thumbnailUrl, onz.parentId, onz.downloadUrl, onz.ImgUrl(ImageSizeEnum._320x240))
-        Next
-    End Sub
-
-    Async Sub ListSubFolders()
-        Dim rslt = Await Clnt.Folders.ListSubFolders("Dir_id", 100, 0)
-        DataGridView1.Rows.Add("name", "Privacy", "id", "TotalFiles", "TotalFolders", "parentId", "permissions", "folderLink")
-        For Each onz In rslt.folders
-            DataGridView1.Rows.Add(onz.name, onz.Privacy.ToString, onz.id, onz.TotalFiles, onz.TotalFolders, onz.parentId, onz.permissions.ToString, onz.folderLink)
-        Next
-    End Sub
-
-    Async Sub Search()
-        Dim rslt = Await Clnt.Folders.Search("Dir_id", TextBox_searchKeyword.Text, Nothing, 100, 0)
-        DataGridView1.Rows.Add("name", "IsPrivate", "id", "size", "thumbnailUrl", "parentId", "downloadUrl", "ImgUrl")
-        For Each onz In rslt.files
-            DataGridView1.Rows.Add(onz.name, onz.IsPrivate, onz.id, ConvSze(onz.size), onz.thumbnailUrl, onz.parentId, onz.downloadUrl, onz.ImgUrl(ImageSizeEnum._320x240))
-        Next
-    End Sub
-
-    Async Sub SearchRoot()
-        Dim rslt = Await Clnt.Data.SearchRoot(TextBox_searchKeyword.Text, Nothing, 100, 0)
-        DataGridView1.Rows.Add("name", "IsPrivate", "id", "size", "thumbnailUrl", "parentId", "downloadUrl", "ImgUrl")
-        For Each onz In rslt.files
-            DataGridView1.Rows.Add(onz.name, onz.IsPrivate, onz.id, ConvSze(onz.size), onz.thumbnailUrl, onz.parentId, onz.downloadUrl, onz.ImgUrl(ImageSizeEnum._320x240))
-        Next
-    End Sub
-
-    Async Sub Create()
-        Dim onz = Await Clnt.Folders.Create("Dir_id", "lolo", "this is a new folder of")
-        DataGridView1.Rows.Add("name", "Privacy", "id", "TotalFiles", "TotalFolders", "parentId", "permissions", "folderLink")
-        DataGridView1.Rows.Add(onz.name, onz.Privacy.ToString, onz.id, onz.TotalFiles, onz.TotalFolders, onz.parentId, onz.permissions.ToString, onz.folderLink)
-    End Sub
-
-    Async Sub Rename()
-        Dim onz = Await Clnt.Folders.Rename("Dir_id", "MyNewName")
-        PropertyGrid1.SelectedObject = onz
-    End Sub
-
-    Async Sub ChangePermission()
-        Dim onz = Await Clnt.Folders.ChangePermission("Dir_id", FolderPermissionsEnum.read)
-        PropertyGrid1.SelectedObject = onz
-    End Sub
-
-    Async Sub ChangePrivacy()
-        Dim onz = Await Clnt.Folders.ChangePrivacy("Dir_id", PrivacyEnum.private)
-        PropertyGrid1.SelectedObject = onz
-    End Sub
-
-    Async Sub Password()
-        Dim onz = Await Clnt.Folders.Password("Dir_id", "1905")
-        PropertyGrid1.SelectedObject = onz
-    End Sub
-
-    Async Sub FolderMetadata()
-        Dim onz = Await Clnt.Folders.Metadata("Dir_id")
-        PropertyGrid1.SelectedObject = onz
-    End Sub
-
-    Async Sub FileMetadata()
-        Dim onz = Await Clnt.Files.Metadata("File_id", AddFieldsEnum.ImageMetainfo)
-        PropertyGrid1.SelectedObject = onz
-    End Sub
-
-    Async Sub Exists()
-        Dim onz = Await Clnt.Folders.Exists("Dir_id")
-        MsgBox(onz)
-    End Sub
-
-    Async Sub SetDescription()
-        Dim onz = Await Clnt.Folders.SetDescription("Dir_id", "look at this")
-        PropertyGrid1.SelectedObject = onz
-    End Sub
-
-    Async Sub ListRoot()
-        Dim getRootId= Await Clnt.Account.UserInfo()
-        Dim rslt = Await Clnt.Data.ListRoot(getRootId.rootFolderId, 100, 0)
-        PropertyGrid1.SelectedObject = rslt.CurrentFolderOptions.Settings
-        DataGridView1.Rows.Add(rslt.FilesFoldersList.UsedSpace, rslt.FilesFoldersList.DailyTrafficUsage)
-
-        For Each onz In rslt.FilesFoldersList.FoldersList
-            DataGridView1.Rows.Add(onz.name, onz.Privacy.ToString, onz.id, ConvSze(onz.size), onz.CreatedDate)
-        Next
-        For Each onz In rslt.FilesFoldersList.FilesList
-            DataGridView1.Rows.Add(onz.name, onz.canPreview, onz.id, ConvSze(onz.size), onz.ThumbUrl, onz.CreatedDate, onz.Ext, onz.typeCss)
-        Next
-    End Sub
-
-    Async Sub UsersSearchFiles()
-        Dim rslt = Await Clnt.Users.SearchFiles("big", FileTypeEnum.Archives, Nothing, Nothing, Nothing, SortByEnum.size, OrderByEnum.asc, 100, 0)
-
-        For Each onz In rslt.items
-            DataGridView1.Rows.Add(onz.fileName, onz.fileId, onz.fileUrl, ConvSze(onz.fileSize), onz.dirName, onz.dirId, onz.dirPath, onz.category, onz.thumbnailUrl)
-        Next
-        L_Counter.Text = rslt.items.Count
-    End Sub
-
-    Async Sub Upload()
-        Dim frm As New DeQma.FileFolderDialogs.VistaOpenFileDialog With {.Multiselect = False}
-        If frm.ShowDialog = DialogResult.OK AndAlso Not String.IsNullOrEmpty(frm.FileName) Then
-
-            Dim UploadCancellationToken As New Threading.CancellationTokenSource()
-            Dim _ReportCls As New Progress(Of FourSharedSDK.ReportStatus)(Sub(ReportClass As FourSharedSDK.ReportStatus)
-                                                                              Label1.Text = String.Format("{0}/{1}", ConvSze(ReportClass.BytesTransferred), ConvSze(ReportClass.TotalBytes))
-                                                                              ProgressBar1.Value = CInt(ReportClass.ProgressPercentage)
-                                                                              Label2.Text = If(CStr(ReportClass.TextStatus) Is Nothing, "Uploading...", CStr(ReportClass.TextStatus))
-                                                                          End Sub)
-            Dim rslt = Await Clnt.Files.Upload(frm.FileName, UploadTypes.FilePath, "Dir_id", IO.Path.GetFileName(frm.FileName), _ReportCls, UploadCancellationToken.Token)
-            PropertyGrid1.SelectedObject = rslt
-        End If
-    End Sub
-
-    Async Sub UploadLargeFile()
-            Dim sze = New IO.FileInfo(frm.FileName).Length
-            Dim rslt = Await Clnt.Files.UploadLargeFile(frm.FileName, UploadTypes.FilePath, "Dir_id", IO.Path.GetFileName(frm.FileName), sze, _ReportCls, UploadCancellationToken.Token)
-    End Sub
-
-    Async Sub FileUpdate()
-            Dim rslt = Await Clnt.Files.Update(frm.FileName, UploadTypes.FilePath, "File_id", "Dir_id", IO.Path.GetFileName(frm.FileName), _ReportCls, UploadCancellationToken.Token)
-            PropertyGrid1.SelectedObject = rslt
-    End Sub
-
-    Async Sub ThumbnailUrl()
-        Dim onz = Await Clnt.Files.ThumbnailUrl("File_id", ImageSizeEnum._320x240)
-        DataGridView1.Rows.Add(onz)
-    End Sub
-
-    Async Sub DeleteMultipleFiles()
-        Dim onz = Await Clnt.Files.DeleteMultiple(New List(Of String) From {"File_id_1", "File_id_2", "File_id_3"})
-        DataGridView1.Rows.Add(onz)
-    End Sub
-
-    Async Sub Download()
-        Dim frm As New DeQma.FileFolderDialogs.VistaFolderBrowserDialog With {.ShowNewFolderButton = True}
-        If frm.ShowDialog = DialogResult.OK AndAlso Not String.IsNullOrEmpty(frm.SelectedPath) Then
-            Dim UploadCancellationToken As New Threading.CancellationTokenSource()
-            Dim _ReportCls As New Progress(Of FourSharedSDK.ReportStatus)(Sub(ReportClass As FourSharedSDK.ReportStatus)
-                                                                              Label1.Text = String.Format("{0}/{1}", ConvSze(ReportClass.BytesTransferred), ConvSze(ReportClass.TotalBytes))
-                                                                              ProgressBar1.Value = CInt(ReportClass.ProgressPercentage)
-                                                                              Label2.Text = If(CStr(ReportClass.TextStatus) Is Nothing, "Downloading...", CStr(ReportClass.TextStatus))
-                                                                          End Sub)
-            Dim getFileId= Await Clnt.Files.Metadata("File_id")
-            Await Clnt.Files.Download(getFileId.path, frm.SelectedPath, _ReportCls, UploadCancellationToken.Token)
-        End If
-    End Sub
-
-    Async Sub UsersMetadata()
-        Dim rslt = Await Clnt.Users.Metadata("User_id")
-        PropertyGrid1.SelectedObject = rslt
-    End Sub
-
-    Async Sub UsersAvatar()
-        Dim rslt = Await Clnt.Users.AvatarPicture("User_id", ImageSizeEnum._2560x1600)
-        DataGridView1.Rows.Add(rslt)
-    End Sub
-
-    Async Sub ExistsInDir()
-        Dim rslt = Await Clnt.Folders.ExistsInTargetFolder("New%20folder", "Dir_id")
-        DataGridView1.Rows.Add(rslt)
-    End Sub
-
-    Async Sub TrashMultipleFolders()
-        Dim onz = Await Clnt.Folders.TrashMultiple(New List(Of String) From {"Dir_id_1", "Dir_id_2"})
-        DataGridView1.Rows.Add(onz)
-    End Sub
-
-    Async Sub ListComments()
-        Dim rslt = Await Clnt.Comments.ListComments("File_id", 100, 0)
-
-        For Each onz In rslt.comments
-            DataGridView1.Rows.Add(onz.Comment, onz.id, onz.User.userName)
-        Next
-    End Sub
-
-    Async Sub Comment()
-        Dim rslt = Await Clnt.Comments.Create("File_id", "test api")
-        PropertyGrid1.SelectedObject = rslt
-    End Sub
-
-    Async Sub CommentDelete()
-        Dim rslt = Await Clnt.Comments.Delete("File_id", "Comment_id")
-        MsgBox(rslt)
-    End Sub
-
-    Async Sub ReplyComment()
-        Dim rslt = Await Clnt.Comments.Reply("File_id", "Comment_id", "testing message...")
-        PropertyGrid1.SelectedObject = rslt
-    End Sub
-
-    Async Sub ReportAsSpam_UnReportAsSpam()
-        Dim reporting = Await Clnt.Comments.ReportAsSpam("Comment_id")
-        Dim rslt2 = Await Clnt.Comments.UnReportAsSpam(reporting)
-    End Sub
-
-    Async Sub ListFilesRelatedToFile()
-        Dim rslt = Await Clnt.Users.ListFilesRelatedToFile("File_id", 100, 0)
-
-        For Each onz In rslt.files
-            DataGridView1.Rows.Add(onz.name, onz.IsPrivate, onz.id, ConvSze(onz.size), onz.thumbnailUrl, onz.parentId, onz.downloadUrl, onz.ImgUrl(ImageSizeEnum._320x240))
-        Next
-    End Sub
-
-    Async Sub ImportToMyAccount()
-        Dim rslt = Await Clnt.Files.ImportToMyAccount("File_id", "ImportToDir_id")
-        PropertyGrid1.SelectedObject = rslt
-    End Sub
-
-    Async Sub RootID()
-        Dim rslt = Await Clnt.Data.RootID()
-        DataGridView1.Rows.Add(rslt)
-    End Sub
-
-    Async Sub EmptyRecycleBin()
-        Dim rslt = Await Clnt.Data.EmptyRecycleBin()
-        DataGridView1.Rows.Add(rslt)
-    End Sub
-
-    Async Sub RecycleBinID()
-        'Dim rslt = Await Clnt.Data.RecycleBinID()
-        Dim rslt = Await Clnt.Data.RecycleBinID("Root_id")
-        DataGridView1.Rows.Add(rslt)
-    End Sub
-
-    Async Sub ListRecycleBin()
-        Dim recBinId = Await Clnt.Data.RecycleBinID
-        Dim rslt = Await Clnt.Data.ListRecycleBin(recBinId, 100, 0)
-
-        For Each onz In rslt.files
-            DataGridView1.Rows.Add(onz.name, onz.time, onz.id, ConvSze(onz.size), onz.recoverPath)
-        Next
-        For Each onz In rslt.dirs
-            DataGridView1.Rows.Add(onz.name, onz.time, onz.id, ConvSze(onz.size), onz.recoverPath)
-        Next
-    End Sub
-
-    Async Sub RestoreRecycleBin()
-        Dim recBinId = Await Clnt.Data.RecycleBinID
-        Dim rslt = Await Clnt.Data.RestoreRecycleBin(recBinId)
-        DataGridView1.Rows.Add(rslt)
-    End Sub
-
-    Async Sub GetLinkForFile()
-        Dim rslt = Await Clnt.Data.GetLinkForFile()
-        DataGridView1.Rows.Add(rslt)
-    End Sub
-
-    Async Sub FileUnZip()
-        Dim rslt = Await Clnt.Files.UnZip("File_id")
-        DataGridView1.Rows.Add(rslt)
-    End Sub
-
-    Async Sub FileExists()
-        Dim rslt = Await Clnt.Files.Exists("File_id")
-        DataGridView1.Rows.Add(rslt)
-    End Sub
-
-
-
-
-
-
-```
+        ''Users
+        Await client.Users.AvatarPicture("user_id", ImageSizeEnum._320x240)
+        Await client.Users.ListFilesRelatedToFile("file_id", 50, 0)
+        Await client.Users.Metadata("user_id")
+        Await client.Users.SearchFiles("emy", FilesFilterEnum.all, FilesTypeEnum.asf, 5000, 60000, SortByEnum.name, OrderByEnum.asc, 50, 0)
+    End Function
+    ```
